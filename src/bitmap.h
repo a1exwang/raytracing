@@ -9,13 +9,13 @@
 
 typedef struct {
   int width, height;
-  vector **buffer;
+  Vector **buffer;
 } Bitmap;
 
 void bitmap_init(Bitmap *bitmap, int w, int h);
 void bitmap_to_png(Bitmap *bitmap, const char *path);
 
-int rgb_color_v(const vector *v);
+int rgb_color_v(const Vector *v);
 
 
 #endif

@@ -107,10 +107,10 @@ void bitmap_init(Bitmap *bitmap, int w, int h) {
   bitmap->width = w;
   bitmap->height = h;
 
-  bitmap->buffer = (vector**) malloc(sizeof(vector*) * w);
+  bitmap->buffer = (Vector**) malloc(sizeof(Vector*) * w);
   for (int i = 0; i < w; ++i) {
-    bitmap->buffer[i] = (vector *) malloc((sizeof(vector) * h));
-    memset(bitmap->buffer[i], 0, sizeof(vector) * h);
+    bitmap->buffer[i] = (Vector *) malloc((sizeof(Vector) * h));
+    memset(bitmap->buffer[i], 0, sizeof(Vector) * h);
   }
 }
 

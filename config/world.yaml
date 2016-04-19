@@ -1,0 +1,4 @@
+world:
+  - ball:
+      pos:    2, 0, 0
+      radius: 0.3

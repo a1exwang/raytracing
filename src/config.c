@@ -8,8 +8,8 @@
 #include <yaml.h>
 
 
-vector parse_vector_string(char *str) {
-  vector ret;
+Vector parse_vector_string(char *str) {
+  Vector ret;
   int s = 0;
   int last = -1;
   for (int i = 0; ; ++i) {

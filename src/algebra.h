@@ -7,21 +7,24 @@
 
 typedef struct {
   double x, y, z;
-} vector;
-void vector_init(vector *v);
+} Vector;
+void vector_init(Vector *v);
 
-double modulation(const vector *v);
-double modulation2(const vector *v);
-double dot(const vector *a, const vector *b);
-vector cross(const vector *a, const vector *b);
-void normalize(vector *v);
-vector sub(const vector *a, const vector *b);
-vector add(const vector *a, const vector *b);
-vector rmul(const vector *a, double v);
+double modulation(const Vector *v);
+double modulation2(const Vector *v);
+double dot(const Vector *a, const Vector *b);
+Vector cross(const Vector *a, const Vector *b);
+void normalize(Vector *v);
+Vector sub(const Vector *a, const Vector *b);
+Vector add(const Vector *a, const Vector *b);
+Vector rmul(const Vector *a, double v);
 
 typedef struct {
-  vector pos;
-  vector front;
+  Vector pos;
+  Vector front;
 } Ray;
+
+Vector v3(double x, double y, double z);
+
 
 #endif
