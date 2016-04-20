@@ -41,18 +41,46 @@ Ray camera_lens_func_plane(const Camera *camera, int x, int y) {
   return ray;
 }
 
-void camera_render(Camera *camera, Bitmap *bitmap) {
+typedef struct TThreadParam {
+  int trace_depth;
+  int x, y;
+  const Camera *camera;
+  Vector *color;
+} ThreadParam;
+
+void *thread_func(void *param) {
+  ThreadParam *p = (ThreadParam*)param;
+  //printf("tracing: %d, %d\n", p->x, p->y);
+  Ray ray = p->camera->lens_func(p->camera, p->x, p->y);
+  Vector color = ray_trace(p->camera->world, &ray, p->trace_depth);
+  *p->color = color;
+  return NULL;
+}
+
+#include "threadpool/thpool.h"
+void camera_render(const Camera *camera, Bitmap *bitmap) {
   srand((unsigned) time(NULL));
+
+  threadpool thpool = thpool_init(4);
 
   // 对相机上的每一个点反向追踪
   for (int x = 0; x < camera->width; ++x) {
     for (int y = 0; y < camera->height; ++y) {
-      Ray ray = camera->lens_func(camera, x, y);
-      Vector color = ray_trace(camera->world, &ray, 10);
+      //Ray ray = camera->lens_func(camera, x, y);
+      //Vector color = ray_trace(camera->world, &ray, 10);
       //printf("color: %f, %f, %f\n", color.x, color.y, color.z);
-      bitmap->buffer[x][y] = color;
+      ThreadParam *p = (ThreadParam*) malloc(sizeof(ThreadParam));
+      p->camera = camera;
+      p->x = x; p->y = y;
+      p->trace_depth = 300;
+      p->color = &bitmap->buffer[x][y];
+      //thread_func(p);
+      thpool_add_work(thpool, (void*)thread_func, p);
     }
   }
+
+  thpool_wait(thpool);
+  thpool_destroy(thpool);
 }
 
 void camera_init(Camera *c, int width, int height)  {
