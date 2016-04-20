@@ -34,6 +34,6 @@ typedef struct TLight {
 //} SurfaceLight;
 
 void spot_light_init(Light *light, double r, double g, double b);
-Vector spot_light_diffuss_func(const Light *light, const struct TWorld *world, const Vector *pos, const Object *object);
+Vector spot_light_diffuse_func(const Light *light, const struct TWorld *world, const Vector *pos, const Object *object);
 
 #endif //RAYTRACING_LIGHT_H

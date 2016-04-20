@@ -9,14 +9,17 @@
 #include "list.h"
 
 enum {
-  OT_Ball
+  OT_Ball,
+  OT_Plane
 };
 
 struct TObject;
 
 typedef Vector (*NormalFunc) (const struct TObject *object, const Vector *pos);
 typedef int (*IntersectFunc)(const struct TObject *object, const Ray *ray, Ray *reflect, Vector *pt, Vector *n);
-typedef Vector (*ColorFunc)(const struct TObject *object, const Ray *ray, Ray *reflect, Vector *pt, Vector *n);
+typedef int (*RefractionFunc) (const struct TObject *object, const Ray *ray, const Ray *reflect,
+                               const Vector *pt, const Vector *n, Ray *refract, Vector *attenuation);
+typedef Vector (*AttenuationFunc)(const struct TObject *object, const Ray *ray, const Ray *reflect, const Vector *pt, const Vector *n);
 
 typedef struct TObject {
   ListHead list;
@@ -29,9 +32,10 @@ typedef struct TObject {
   void *priv;
   NormalFunc normal_func;
   IntersectFunc intersection;
-  //ColorFunc color;
+  AttenuationFunc attenuation_func;
+  RefractionFunc refraction_func;
 
 } Object;
 
-
+Ray get_reflection_by_normal_and_ray(const Ray *ray, const Vector *normal, const Vector *intersection);
 #endif //RAYTRACING_OBJECT_H

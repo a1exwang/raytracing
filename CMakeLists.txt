@@ -10,7 +10,9 @@ set(SOURCE_FILES
         src/light.c
         src/world.c
         src/list.c
-        src/sphere.c)
+        src/sphere.c
+        src/plane.c
+        src/object.c)
 add_executable(raytracing ${SOURCE_FILES})
 target_link_libraries(raytracing m)
 target_link_libraries(raytracing png)

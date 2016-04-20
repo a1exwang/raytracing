@@ -92,6 +92,51 @@ Vector color_black() {
   return ret;
 }
 
+Vector color_mix(Vector a, Vector b) {
+  double e = M_E;
+  Vector v = {
+          .x = 1 - 1/pow(e, (log(1/(1-a.x)) + log(1/(1-b.x))) / log(e)),
+          .y = 1 - 1/pow(e, (log(1/(1-a.y)) + log(1/(1-b.y))) / log(e)),
+          .z = 1 - 1/pow(e, (log(1/(1-a.z)) + log(1/(1-b.z))) / log(e))
+  };
+//  Vector v = {
+//          .x = fmax(a.x+b.x, 0.9999),
+//          .y = fmax(a.y+b.y, 0.9999),
+//          .z = fmax(a.z+b.z, 1)
+//  };
+//    Vector v = {
+//          .x = fmax((a.x+b.x)/2, 1),
+//          .y = fmax((a.y+b.y)/2, 1),
+//          .z = fmax((a.z+b.z)/2, 1)
+//  };
+  return v;
+}
+
+double vdot(Vector a, Vector b) {
+  return dot(&a, &b);
+}
+
+Vector vcross(Vector a, Vector b) {
+  Vector result = cross(&a, &b);
+  return result;
+}
+
+Vector vadd(Vector a, Vector b) {
+  Vector result = add(&a, &b);
+  return result;
+}
+
+Vector vrmul(Vector a, double b) {
+  Vector result = rmul(&a, b);
+  return result;
+}
+
+
+
+
+
+
+
 
 
 

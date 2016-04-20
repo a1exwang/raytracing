@@ -6,6 +6,7 @@
 #include "object.h"
 #include "list.h"
 #include "sphere.h"
+#include "plane.h"
 #include <math.h>
 
 void world_init(World *world) {
@@ -21,41 +22,44 @@ double world_max_distance(const World *world) {
 }
 
 void world_zygote(World *world) {
-  Sphere *ball = (Sphere*) malloc(sizeof(Sphere));
-  sphere_init(ball);
-  ball->object.pos.x = 4.5;
-  ball->object.pos.y = 0;
-  ball->object.pos.z = 0.3;
-  ball->radius = 1.2;
-  ball->object.name = "big ball";
-  world->first_object = &ball->object;
+  Sphere *sp = (Sphere*) malloc(sizeof(Sphere));
+  sphere_init(sp);
+  sp->object.pos = v3(4, 0, -2);
+  sp->radius = 0.5;
+  sp->object.name = "small sp";
+  sp->color_attenuation = v3(1, 1, 1);
+  sp->refractive = 1.8;
+  world->first_object = &sp->object;
 
-  ball = (Sphere*) malloc(sizeof(Sphere));
-  sphere_init(ball);
-  ball->object.name = "small ball";
-  ball->object.pos.x = 2;
-  ball->object.pos.y = 0;
-  ball->object.pos.z = 0;
-  ball->radius = 0.5;
-  ball->color = v3(1, 0, 0);
-  list_insert_before(&world->first_object->list, &ball->object.list);
+  sp = (Sphere*) malloc(sizeof(Sphere));
+  sphere_init(sp);
+  sp->object.name = "big sp";
+  sp->object.pos = v3(4, 3, 0);
+  sp->radius = 1.2;
+  sp->refractive = 1.5;
+  sp->color_attenuation = v3(0.5, 0.5, 0.5);
+  list_insert_before(&world->first_object->list, &sp->object.list);
 
-  world->ambient_light.x = world->ambient_light.y = world->ambient_light.z = 0.01;
+//  Plane *plane = (Plane*) malloc(sizeof(Plane));
+//  plane_init(plane);
+//  plane->object.name = "floor";
+//  plane->object.pos = v3(0, 0, 1);
+//  plane->object.front = v3(0, 0, 1);
+//  plane->object.up = v3(1, 0, 0);
+//  plane->color_attenuation = v3(0.5, 0.5, 0.5);
+//  list_insert_before(&world->first_object->list, &plane->object.list);
+
+  world->ambient_light = v3(0.01, 0.01, 0.01);
 
   Light *light = (Light*) malloc(sizeof(Light));
-  spot_light_init(light, 1, 1, 1);
-  light->pos.x = 4;
-  light->pos.y = 0;
-  light->pos.z = 20;
+  spot_light_init(light, 0.5, 0.5, 0.5);
+  light->pos = v3(4, 0, -5);
   world->first_light = light;
 
-  light = (Light*) malloc(sizeof(Light));
-  spot_light_init(light, 0, 1, 1);
-  light->pos.x = 0;
-  light->pos.y = 1;
-  light->pos.z = -5.2;
-
-  list_insert(&world->first_light->list, &light->list);
+//  light = (Light*) malloc(sizeof(Light));
+//  spot_light_init(light, 0.5, 0.5, 0.5);
+//  light->pos = v3(0, 1, 3);
+//  list_insert(&world->first_light->list, &light->list);
 }
 
 void world_bind_camera(World *world, Camera *camera) {
@@ -63,15 +67,14 @@ void world_bind_camera(World *world, Camera *camera) {
   camera->world = world;
 }
 
-Object *world_closest_object(const World *world, const Ray *ray, Vector *intersection, Ray *reflect) {
+Object *world_closest_object(const World *world, const Ray *ray, Vector *intersection, Ray *reflect, Vector *n) {
 
   Object *nearest = NULL;
   double nearest_distance = world_max_distance(world);
 
   LIST_FOREACH(&world->first_object->list, Object, list, object)
-      Vector n;
       int success = 0;
-      if (object->intersection(object, ray, reflect, intersection, &n)) {
+      if (object->intersection(object, ray, reflect, intersection, n)) {
         double dis = ray_distance(ray, intersection, &success);
         if (dis >= 0 && dis < nearest_distance) {
           nearest_distance = dis;
@@ -82,42 +85,56 @@ Object *world_closest_object(const World *world, const Ray *ray, Vector *interse
   return nearest;
 }
 
-// 获得所有光源, 在物体某个位置的光照颜色
+// 获得所有光源, 在物体某个位置的光照颜色之和
 Vector get_light_color(World *world, const Vector *pos, const Object *object) {
-  Vector total = { 0, 0, 0 };
-  int i = 0;
+  Vector total = world->ambient_light;
   LIST_FOREACH(&world->first_light->list, Light, list, light)
     Vector color = light->diffuse_func(light, world, pos, object);
-    //printf("light %d: %f, %f, %f\t", i++, color.x, color.y, color.z);
-    total = add(&total, &color);
+    total = color_mix(total, color);
   LIST_FOREACH_END()
-  //printf("\n");
   return total;
 }
 
 // 递归跟踪某一条光线
 Vector ray_trace(World *world, Ray *ray, int trace_times) {
+  Vector total = world->ambient_light;
   if (trace_times <= 0)
-    return color_black();
+    return total;
 
-  Vector intersection;
+  Vector intersection, n;
   Ray reflect;
   // 该光线直接射中物体
-  Object *object = world_closest_object(world, ray, &intersection, &reflect);
+  Object *object = world_closest_object(world, ray, &intersection, &reflect, &n);
   if (!object)
-    return color_black();
+    return total;
 
+  // 光源在此处的散射光线
   Vector light_color = get_light_color(world, &intersection, object);
-  Vector add_ambient = add(&light_color, &world->ambient_light);
+  total = color_mix(light_color, world->ambient_light);
 
-  return add_ambient;
-  Vector color2 = ray_trace(world, &reflect, trace_times - 1);
-  // color2需要衰减一下
-  color2 = rmul(&color2, 0.5);
-  /*printf("light: %f, %f, %f, recur: %f, %f, %f\n",
-         light_color.x, light_color.y, light_color.z,
-         color2.x, color2.y, color2.z);*/
+  Vector color, att;
+  // 如果是反射材质, 跟踪反射光线
+  if (object->attenuation_func) {
+    color = ray_trace(world, &reflect, trace_times - 1);
+    // 乘以反射光线的衰减系数
+    att = object->attenuation_func(object, ray, &reflect, &intersection, &n);
+    color.x *= att.x;
+    color.y *= att.y;
+    color.z *= att.z;
+    total = color_mix(color, total);
+  }
 
+  if (object->refraction_func) {
+    // 如果是折射材质, 跟踪折射光线
+    Ray refraction;
+    if (object->refraction_func(object, ray, &reflect, &intersection, &n, &refraction, &att)) {
+      color = ray_trace(world, &refraction, trace_times - 1);
+      color.x *= att.x;
+      color.y *= att.y;
+      color.z *= att.z;
+      total = color_mix(color, total);
+    }
+  }
 
-  return add(&color2, &light_color);
+  return total;
 }

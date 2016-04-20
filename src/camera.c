@@ -48,21 +48,8 @@ void camera_render(Camera *camera, Bitmap *bitmap) {
   for (int x = 0; x < camera->width; ++x) {
     for (int y = 0; y < camera->height; ++y) {
       Ray ray = camera->lens_func(camera, x, y);
-
-      Vector color = { 0, 0, 0 };
-//      Vector inter, v;
-//      Ray reflect;
-
-//      Vector this_color;
-
-//      LIST_FOREACH(&camera->world->first_object->list, Object, list, object)
-//        if (object->intersection(object, &ray, &reflect, &inter, &v)) {
-//          this_color = object->color(object, &ray, &reflect, &inter, &v);
-//          color = add(&color, &this_color);
-//        }
-//      LIST_FOREACH_END()
-      color = ray_trace(camera->world, &ray, 5);
-
+      Vector color = ray_trace(camera->world, &ray, 10);
+      //printf("color: %f, %f, %f\n", color.x, color.y, color.z);
       bitmap->buffer[x][y] = color;
     }
   }
