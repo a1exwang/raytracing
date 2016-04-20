@@ -21,6 +21,7 @@ typedef Vector (*ColorFunc)(const struct TObject *object, const Ray *ray, Ray *r
 typedef struct TObject {
   ListHead list;
 
+  char *name;
   int type;
   Vector pos;
   Vector front;
@@ -28,7 +29,8 @@ typedef struct TObject {
   void *priv;
   NormalFunc normal_func;
   IntersectFunc intersection;
-  ColorFunc color;
+  //ColorFunc color;
+
 } Object;
 
 

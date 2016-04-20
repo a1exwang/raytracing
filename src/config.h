@@ -5,6 +5,6 @@
 #ifndef RAYTRACING_CONFIG_H
 #define RAYTRACING_CONFIG_H
 
-void camera_configure(const char *file, Camera *c);
+void read_configuration(const char *file, Camera *c, World *world);
 
 #endif //RAYTRACING_CONFIG_H

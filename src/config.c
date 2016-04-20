@@ -79,7 +79,7 @@ Vector parse_vector_string(char *str) {
   }
 
 
-void camera_configure(const char *file, Camera *camera) {
+void read_configuration(const char *file, Camera *camera, World *world) {
   FILE *fh = fopen(file, "r");
   yaml_parser_t parser;
 
@@ -106,7 +106,7 @@ void camera_configure(const char *file, Camera *camera) {
 
     switch(event.type) {
     case YAML_NO_EVENT: puts("No event!"); break;
-      /* Stream camera_configure/end */
+      /* Stream read_configuration/end */
     //case YAML_STREAM_START_EVENT: puts("STREAM START"); break;
     //case YAML_STREAM_END_EVENT:   puts("STREAM END");   break;
       /* Block delimeters */

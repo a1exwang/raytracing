@@ -61,21 +61,36 @@ Vector cross(const Vector *a, const Vector *b) {
   return result;
 }
 
+int same_vector(const Vector *a, const Vector *b) {
+  Vector delta = sub(a, b);
+  return zero(modulation(&delta));
+}
 void normalize(Vector *v) {
   double r = modulation(v);
   *v = rmul(v, 1 / r);
 }
 
+int zero(double value) {
+  return fabs(value) <= ZERO;
+}
 
+double ray_distance(const Ray *ray, const Vector *pos, int *success) {
+  Vector delta = sub(&ray->pos, pos);
+  Vector cross_value = cross(&delta, &ray->front);
+  if (zero(modulation(&cross_value))) {
+    *success = 1;
+    return modulation(&delta);
+  }
+  else {
+    *success = 0;
+    return 0;
+  }
+}
 
-
-
-
-
-
-
-
-
+Vector color_black() {
+  Vector ret = { 0, 0, 0 };
+  return ret;
+}
 
 
 

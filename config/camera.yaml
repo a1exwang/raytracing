@@ -1,8 +1,8 @@
 camera:
-  width:            1024
-  height:           768
-  viewport_width:   1.024
-  viewport_height:  0.768
+  width:            640
+  height:           480
+  viewport_width:   4
+  viewport_height:  3
 
   pos:    0, 0, 0
   front:  1, 0, 0

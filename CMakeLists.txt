@@ -1,7 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
 project(raytracing)
 
-set(SOURCE_FILES src/main.c src/camera.c src/bitmap.c src/object.c src/algebra.c src/config.c src/config.h src/light.c src/light.h src/world.c src/world.h src/list.c src/list.h)
+set(SOURCE_FILES
+        src/main.c
+        src/camera.c
+        src/bitmap.c
+        src/algebra.c
+        src/config.c
+        src/light.c
+        src/world.c
+        src/list.c
+        src/sphere.c)
 add_executable(raytracing ${SOURCE_FILES})
 target_link_libraries(raytracing m)
 target_link_libraries(raytracing png)

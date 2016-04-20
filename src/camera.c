@@ -13,7 +13,11 @@
 #include "light.h"
 #include "list.h"
 
-Vector get_camera_point_pos(const Camera *camera, int x, int y) {
+Ray camera_lens_func_plane(const Camera *camera, int x, int y) {
+  CameraLensPlaneData *plane = (CameraLensPlaneData*)camera->lens_data;
+  Vector delta = rmul(&camera->front, -plane->image_distance);
+  Vector eye = add(&camera->pos, &delta);
+
   Vector xnorm, ynorm;
   Vector relpos, xrel, yrel;
 
@@ -28,34 +32,36 @@ Vector get_camera_point_pos(const Camera *camera, int x, int y) {
 
   relpos = add(&xrel, &yrel);
   Vector pos = add(&camera->pos, &relpos);
-  return pos;
+
+  Vector front = sub(&pos, &eye);
+  Ray ray = {
+          .front = front,
+          .pos = pos
+  };
+  return ray;
 }
 
 void camera_render(Camera *camera, Bitmap *bitmap) {
   srand((unsigned) time(NULL));
 
-  //Ball *ball = (Ball*) camera->object;
-
   // 对相机上的每一个点反向追踪
   for (int x = 0; x < camera->width; ++x) {
     for (int y = 0; y < camera->height; ++y) {
-      Ray ray = {
-              .front = camera->front,
-              .pos = get_camera_point_pos(camera, x, y)
-      };
+      Ray ray = camera->lens_func(camera, x, y);
 
       Vector color = { 0, 0, 0 };
-      Vector inter, v;
-      Ray reflect;
+//      Vector inter, v;
+//      Ray reflect;
 
-      Vector this_color;
+//      Vector this_color;
 
-      LIST_FOREACH(&camera->world->first_object->list, Object, list, object)
-        if (object->intersection(object, &ray, &reflect, &inter, &v)) {
-          this_color = object->color(object, &ray, &reflect, &inter, &v);
-          color = add(&color, &this_color);
-        }
-      LIST_FOREACH_END()
+//      LIST_FOREACH(&camera->world->first_object->list, Object, list, object)
+//        if (object->intersection(object, &ray, &reflect, &inter, &v)) {
+//          this_color = object->color(object, &ray, &reflect, &inter, &v);
+//          color = add(&color, &this_color);
+//        }
+//      LIST_FOREACH_END()
+      color = ray_trace(camera->world, &ray, 5);
 
       bitmap->buffer[x][y] = color;
     }
@@ -66,7 +72,11 @@ void camera_init(Camera *c, int width, int height)  {
   c->width = width;
   c->height = height;
 
+  CameraLensPlaneData *data = (CameraLensPlaneData*) malloc(sizeof(CameraLensPlaneData));
+  data->image_distance = 3;
 
+  c->lens_func = camera_lens_func_plane;
+  c->lens_data = data;
 }
 
 void camera_goto(Camera *c, double x, double y, double z) {
