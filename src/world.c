@@ -24,19 +24,19 @@ double world_max_distance(const World *world) {
 void world_zygote(World *world) {
   Sphere *sp = (Sphere*) malloc(sizeof(Sphere));
   sphere_init(sp);
-  sp->object.pos = v3(4, 0, -2);
-  sp->radius = 0.5;
+  sp->object.pos = v3(3, 0, -1);
+  sp->radius = 0.7;
   sp->object.name = "small sp";
-  sp->color_attenuation = v3(1, 1, 1);
-  sp->refractive = 1.8;
+  sp->color_attenuation = v3(0.5, 0.5, 0.5);
+  sp->refractive = 2;
   world->first_object = &sp->object;
 
   sp = (Sphere*) malloc(sizeof(Sphere));
   sphere_init(sp);
   sp->object.name = "big sp";
-  sp->object.pos = v3(4, 3, 0);
+  sp->object.pos = v3(2, 4, 0);
   sp->radius = 1.2;
-  sp->refractive = 1.5;
+  sp->refractive = 3;
   sp->color_attenuation = v3(0.5, 0.5, 0.5);
   list_insert_before(&world->first_object->list, &sp->object.list);
 
@@ -53,7 +53,7 @@ void world_zygote(World *world) {
 
   Light *light = (Light*) malloc(sizeof(Light));
   spot_light_init(light, 0.5, 0.5, 0.5);
-  light->pos = v3(4, 0, -5);
+  light->pos = v3(1, 0, -5);
   world->first_light = light;
 
 //  light = (Light*) malloc(sizeof(Light));
@@ -83,58 +83,4 @@ Object *world_closest_object(const World *world, const Ray *ray, Vector *interse
       }
   LIST_FOREACH_END()
   return nearest;
-}
-
-// 获得所有光源, 在物体某个位置的光照颜色之和
-Vector get_light_color(World *world, const Vector *pos, const Object *object) {
-  Vector total = world->ambient_light;
-  LIST_FOREACH(&world->first_light->list, Light, list, light)
-    Vector color = light->diffuse_func(light, world, pos, object);
-    total = color_mix(total, color);
-  LIST_FOREACH_END()
-  return total;
-}
-
-// 递归跟踪某一条光线
-Vector ray_trace(World *world, Ray *ray, int trace_times) {
-  Vector total = world->ambient_light;
-  if (trace_times <= 0)
-    return total;
-
-  Vector intersection, n;
-  Ray reflect;
-  // 该光线直接射中物体
-  Object *object = world_closest_object(world, ray, &intersection, &reflect, &n);
-  if (!object)
-    return total;
-
-  // 光源在此处的散射光线
-  Vector light_color = get_light_color(world, &intersection, object);
-  total = color_mix(light_color, world->ambient_light);
-
-  Vector color, att;
-  // 如果是反射材质, 跟踪反射光线
-  if (object->attenuation_func) {
-    color = ray_trace(world, &reflect, trace_times - 1);
-    // 乘以反射光线的衰减系数
-    att = object->attenuation_func(object, ray, &reflect, &intersection, &n);
-    color.x *= att.x;
-    color.y *= att.y;
-    color.z *= att.z;
-    total = color_mix(color, total);
-  }
-
-  if (object->refraction_func) {
-    // 如果是折射材质, 跟踪折射光线
-    Ray refraction;
-    if (object->refraction_func(object, ray, &reflect, &intersection, &n, &refraction, &att)) {
-      color = ray_trace(world, &refraction, trace_times - 1);
-      color.x *= att.x;
-      color.y *= att.y;
-      color.z *= att.z;
-      total = color_mix(color, total);
-    }
-  }
-
-  return total;
 }

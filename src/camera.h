@@ -50,7 +50,7 @@ void camera_ortho(Camera *c, double xmin, double xmax, double ymin, double ymax,
 void camera_viewport(Camera *c, double front_x, double front_y, double front_z, double up_x, double up_y, double up_z,
                      double view_width, double view_height);
 
-void camera_render(const Camera *camera, Bitmap *bitmap);
+void camera_render_async(const Camera *camera, Bitmap *bitmap);
 
 
 

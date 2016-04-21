@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.0)
 project(raytracing)
 
 set(SOURCE_FILES
@@ -13,7 +13,7 @@ set(SOURCE_FILES
         src/sphere.c
         src/plane.c
         src/object.c
-        src/threadpool/thpool.c)
+        src/threadpool/thpool.c src/ray_trace.c src/ray_trace.h)
 add_executable(raytracing ${SOURCE_FILES})
 target_link_libraries(raytracing m)
 target_link_libraries(raytracing png)
