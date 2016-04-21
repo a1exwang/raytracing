@@ -27,6 +27,34 @@ void list_insert_before(ListHead *list, ListHead *target);
     } while (list != first); \
   } while (0);
 
+typedef struct TListNode {
+  struct TListNode *prev, *next;
+  void *data;
+} ListNode;
 
+void list_node_init(ListNode *node);
+void list_node_insert(ListNode *node, ListNode* target);
+void list_node_insert_before(ListNode *node, ListNode *target);
+void list_node_delete(ListNode *node);
+int list_node_is_empty(const ListNode *node);
+
+#define LIST_NODE_INSERT(list, mydata) \
+  do { \
+  (list)->data = (mydata); \
+  ListNode *new_node = malloc(sizeof(ListNode)); \
+  new_node->data = (mydata); \
+  list_node_insert((list), new_node);\
+  } while (0)
+
+#define LIST_NODE_DATA(list, type) \
+  ((type*) list->data)
+
+#define LIST_NODE_REMOVE_LAST(list, type, val) \
+  do { \
+    ListNode *prev = (list)->prev; \
+    list_node_delete(prev); \
+    (val) = (type*) prev->data; \
+    free(prev); \
+  } while (0)
 
 #endif //RAYTRACING_LIST_H

@@ -13,7 +13,8 @@ enum {
   RT_Ambient,
   RT_Diffuse,
   RT_Reflection,
-  RT_Refraction
+  RT_Refraction,
+  RT_Root
 };
 
 typedef struct TRayTrace {
@@ -33,7 +34,7 @@ typedef struct TRayTrace {
   //Vector **buffer;
 } RayTrace;
 
-Vector ray_trace(World *world, Ray *ray, int trace_times);
+void ray_trace(World *world, Ray *ray, int trace_times, int x, int y, Vector **buffer);
 
 
 #endif //RAYTRACING_RAY_TRACE_H

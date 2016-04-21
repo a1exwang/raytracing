@@ -22,3 +22,24 @@ void list_insert_before(ListHead *list, ListHead *target) {
   list->prev->next = target;
   list->prev = target;
 }
+
+void list_node_delete(ListNode *node) {
+  node->prev->next = node->next;
+  node->next->prev = node->prev;
+}
+
+void list_node_insert(ListNode *node, ListNode* target) {
+  target->next = node->next;
+  target->prev = node;
+  node->next->prev = target;
+  node->next = target;
+}
+int list_node_is_empty(const ListNode *node) {
+  return node->next == node && node->prev == node;
+}
+
+void list_node_init(ListNode *node) {
+  node->next = node;
+  node->prev = node;
+}
+

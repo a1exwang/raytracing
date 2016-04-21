@@ -56,8 +56,7 @@ void camera_render_async(const Camera *camera, Bitmap *bitmap) {
   for (int x = 0; x < camera->width; ++x) {
     for (int y = 0; y < camera->height; ++y) {
       Ray ray = camera->lens_func(camera, x, y);
-      Vector color = ray_trace(camera->world, &ray, 100);
-      bitmap->buffer[x][y] = color;
+      ray_trace(camera->world, &ray, 3, x, y, bitmap->buffer);
     }
   }
 }

@@ -27,7 +27,7 @@ void ray_trace_set_ambient(RayTrace *trace, RayTrace **diffuse) {
 }
 
 /* map: ray ==> (reflection, refraction, diffusion) */
-void ray_trace_once(RayTrace *trace, RayTrace **rt_reflect, RayTrace **rt_refract, RayTrace **rt_diffusion) {
+void ray_trace_mapper(RayTrace *trace, RayTrace **rt_reflect, RayTrace **rt_refract, RayTrace **rt_diffusion) {
   *rt_reflect = *rt_refract = *rt_diffusion = NULL;
 
   if (trace->trace_times <= 0) {
@@ -101,26 +101,87 @@ void ray_trace_once(RayTrace *trace, RayTrace **rt_reflect, RayTrace **rt_refrac
 }
 
 /* reduce: (reflection, refractioin) => parent(may be reflection or refraction) */
-// one of refraction and reflection must exist
-//RayTrace *ray_trace_combine(RayTrace *rt_reflect, RayTrace *rt_refract, int *done) {
-//  RayTrace *parent = NULL;
-//  if (rt_reflect) {
-//    parent = rt_reflect->parent;
-//  }
-//  else {
-//    parent = rt_refract->parent;
-//  }
-//
-//  if (!parent) {
-//    *done = 1;
-//  }
-//
-//
-//  return parent;
-//}
+Vector ray_trace_reducer(const Vector *ra, const Vector *rb) {
+  Vector ret = color_mix(*ra, *rb);
+  return ret;
+}
+
+Vector ray_trace_map_reduce_driver(const World *world, const Ray *ray, int total_trace_times, int x, int y) {
+  RayTrace *trace = malloc(sizeof(RayTrace));
+  trace->type = RT_Root;
+  trace->world = world;
+  trace->att.x = trace->att.y = trace->att.z = 1;
+  trace->trace_times = total_trace_times;
+  trace->ray = *ray;
+  trace->parent = NULL;
+  trace->x = x;
+  trace->y = y;
+
+  // enqueue trace
+  ListNode queue;
+  ListNode leaves;
+  list_node_init(&queue);
+  list_node_init(&leaves);
+
+  LIST_NODE_INSERT(&queue, trace);
+
+  while (1) {
+    // break if queue empty?
+    if (list_node_is_empty(&queue))
+      break;
+
+    // dequeue
+    RayTrace *rt;
+    LIST_NODE_REMOVE_LAST(&queue, RayTrace, rt);
+
+    // map
+    RayTrace *refl, *refr, *dif;
+    ray_trace_mapper(rt, &refl, &refr, &dif);
+
+    // enqueue all unmapped, and save all leaf nodes
+    if (refl != NULL) {
+      if (refr->type == RT_Reflection) {
+        LIST_NODE_INSERT(&queue, refl);
+      }
+      else {
+        LIST_NODE_INSERT(&queue, refl);
+      }
+    }
+
+    if (refr != NULL) {
+      if (refr->type == RT_Refraction) {
+        LIST_NODE_INSERT(&queue, refr);
+      }
+      else {
+        LIST_NODE_INSERT(&leaves, refr);
+      }
+    }
+
+    if (dif != NULL) {
+      LIST_NODE_INSERT(&leaves, dif);
+    }
+  }
+
+  Vector color = color_black();
+  while (1) {
+    if (list_node_is_empty(&leaves)) {
+      break;
+    }
+    // dequeue
+    RayTrace *rt;
+    LIST_NODE_REMOVE_LAST(&leaves, RayTrace, rt);
+
+    color = ray_trace_reducer(&rt->color, &color);
+  }
+  return color;
+}
 
 // 递归跟踪某一条光线
-Vector ray_trace(World *world, Ray *ray, int trace_times) {
+void ray_trace(World *world, Ray *ray, int trace_times, int x, int y, Vector **buffer) {
+  buffer[x][y] = ray_trace_map_reduce_driver(world, ray, trace_times, x, y);
+}
+/*
+Vector ray_trace_shabby(World *world, Ray *ray, int trace_times) {
   Vector total = world->ambient_light;
   if (trace_times <= 0)
     return total;
@@ -139,7 +200,7 @@ Vector ray_trace(World *world, Ray *ray, int trace_times) {
   Vector color, att;
   // 如果是反射材质, 跟踪反射光线
   if (object->attenuation_func) {
-    color = ray_trace(world, &reflect, trace_times - 1);
+    color = ray_trace(world, &reflect, trace_times - 1, 0, 0, NULL);
     // 乘以反射光线的衰减系数
     att = object->attenuation_func(object, ray, &reflect, &intersection, &n);
     color.x *= att.x;
@@ -152,7 +213,7 @@ Vector ray_trace(World *world, Ray *ray, int trace_times) {
     // 如果是折射材质, 跟踪折射光线
     Ray refraction;
     if (object->refraction_func(object, ray, &reflect, &intersection, &n, &refraction, &att)) {
-      color = ray_trace(world, &refraction, trace_times - 1);
+      color = ray_trace(world, &refraction, trace_times - 1, 0, 0, NULL);
       color.x *= att.x;
       color.y *= att.y;
       color.z *= att.z;
@@ -161,4 +222,4 @@ Vector ray_trace(World *world, Ray *ray, int trace_times) {
   }
 
   return total;
-}
+}*/
