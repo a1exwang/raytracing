@@ -43,20 +43,13 @@ Ray camera_lens_func_plane(const Camera *camera, int x, int y) {
   return ray;
 }
 
-typedef struct TThreadParam {
-  int trace_depth;
-  int x, y;
-  const Camera *camera;
-  Vector *color;
-} ThreadParam;
-
-void camera_render_async(const Camera *camera, Bitmap *bitmap) {
+void camera_render_sync(const Camera *camera, Bitmap *bitmap) {
 
   // 对相机上的每一个点反向追踪
   for (int x = 0; x < camera->width; ++x) {
     for (int y = 0; y < camera->height; ++y) {
       Ray ray = camera->lens_func(camera, x, y);
-      ray_trace(camera->world, &ray, 3, x, y, bitmap->buffer);
+      ray_trace(camera->world, &ray, 4, x, y, bitmap->buffer);
     }
   }
 }
@@ -66,7 +59,7 @@ void camera_init(Camera *c, int width, int height)  {
   c->height = height;
 
   CameraLensPlaneData *data = (CameraLensPlaneData*) malloc(sizeof(CameraLensPlaneData));
-  data->image_distance = 3;
+  data->image_distance = 10;
 
   c->lens_func = camera_lens_func_plane;
   c->lens_data = data;

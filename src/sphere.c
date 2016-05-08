@@ -62,7 +62,7 @@ Vector sphere_attenuation_func(const struct TObject *object,
                                const Vector *pt,
                                const Vector *n) {
   const Sphere *sphere = (const Sphere*) object->priv;
-  return sphere->color_attenuation;
+  return sphere->reflect_attenuation;
 }
 
 
@@ -83,12 +83,12 @@ void sphere_init(Sphere *sp) {
   list_init(&sp->object.list);
   sp->object.intersection = sphere_intersection;
   sp->object.normal_func = sphere_normal_func;
-  sp->object.attenuation_func = sphere_attenuation_func;
+  sp->object.reflective_attenuation_func = sphere_attenuation_func;
   sp->object.refraction_func = sphere_refraction_func;
 
   sp->radius = 0.3;
   sp->color.x = sp->color.y = sp->color.z = 1;
-  sp->color_attenuation = v3(0.4, 0.4, 0.4);
+  sp->reflect_attenuation = v3(0.4, 0.4, 0.4);
 }
 
 int sphere_refraction_func(const struct TObject *object, const Ray *ray, const Ray *reflect, const Vector *pt,
@@ -124,7 +124,7 @@ int sphere_refraction_func(const struct TObject *object, const Ray *ray, const R
 
   refract->front = vadd(vrmul(left, sin(r)), vrmul(nn, cos(r)));
   refract->pos = *pt;
-  *attenuation = sp->color_attenuation;
+  *attenuation = sp->refract_attenuation;
   return 1;
 }
 

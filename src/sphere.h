@@ -11,7 +11,8 @@ typedef struct TSphere {
   Object object;
   double radius;
   Vector color;
-  Vector color_attenuation;
+  Vector reflect_attenuation;
+  Vector refract_attenuation;
   double refractive;
 } Sphere;
 

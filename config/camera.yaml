@@ -1,11 +1,11 @@
 camera:
-  width:            640
-  height:           480
+  width:            1024
+  height:           768
   viewport_width:   4
   viewport_height:  3
 
   pos:    0, 0, 0
-  front:  1, 0, 0
+  front:  1, 0, 0.5
   up:     0, 0, 1
 
   xmin:   -1

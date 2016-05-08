@@ -6,11 +6,15 @@
 #include "world.h"
 
 // 获得所有光源, 在物体某个位置的光照颜色之和
-Vector get_light_color(const World *world, const Vector *pos, const Object *object) {
+Vector get_light_color(const World *world, const Vector *pos, const Object *object, const Ray *ray) {
   Vector total = world->ambient_light;
   LIST_FOREACH(&world->first_light->list, Light, list, light)
-  Vector color = light->diffuse_func(light, world, pos, object);
-  total = color_mix(total, color);
+    Vector color = light->diffuse_func(light, world, pos, object);
+    total = color_mix(total, color);
+    if (light->reflective_func) {
+      color = light->reflective_func(light, world, pos, object, ray);
+      total = color_mix(total, color);
+    }
   LIST_FOREACH_END()
   return total;
 }
@@ -26,7 +30,14 @@ void ray_trace_set_ambient(RayTrace *trace, RayTrace **diffuse) {
   (*diffuse)->color = trace->world->ambient_light;
 }
 
-/* map: ray ==> (reflection, refraction, diffusion) */
+/* *
+ * map: ray ==> (reflection, refraction, diffusion)
+ * 做一条光线的反射, 折射光线, 散射光线, 替换原光线
+ * trace: 原光线
+ * rt_reflect: 反射光线
+ * rt_refract: 折射光线
+ * rt_diffusion: 散射和环境光
+ * */
 void ray_trace_mapper(RayTrace *trace, RayTrace **rt_reflect, RayTrace **rt_refract, RayTrace **rt_diffusion) {
   *rt_reflect = *rt_refract = *rt_diffusion = NULL;
 
@@ -45,8 +56,8 @@ void ray_trace_mapper(RayTrace *trace, RayTrace **rt_reflect, RayTrace **rt_refr
   }
 
   Vector total, att;
-  // 光源在此处的散射光线, 以及环境光
-  Vector light_color = get_light_color(trace->world, &intersection, object);
+  // 光源直接散射光+光源直接反射光+环境光
+  Vector light_color = get_light_color(trace->world, &intersection, object, &trace->ray);
   total = color_mix(light_color, trace->world->ambient_light);
   total.x *= trace->att.x;
   total.y *= trace->att.y;
@@ -62,7 +73,7 @@ void ray_trace_mapper(RayTrace *trace, RayTrace **rt_reflect, RayTrace **rt_refr
   *rt_diffusion = rt_diffuse;
 
   // 如果是反射材质, 跟踪反射光线
-  if (object->attenuation_func) {
+  if (object->reflective_attenuation_func) {
     *rt_reflect = malloc(sizeof(RayTrace));
     (*rt_reflect)->parent = trace;
     (*rt_reflect)->type = RT_Reflection;
@@ -71,12 +82,15 @@ void ray_trace_mapper(RayTrace *trace, RayTrace **rt_reflect, RayTrace **rt_refr
     (*rt_reflect)->x = trace->x;
     (*rt_reflect)->y = trace->y;
     (*rt_reflect)->ray = reflect;
-    (*rt_reflect)->color = total;
-    (*rt_reflect)->att = object->attenuation_func(object, &trace->ray, &reflect, &intersection, &n);
+    (*rt_reflect)->att = object->reflective_attenuation_func(object, &trace->ray, &reflect, &intersection, &n);
     (*rt_reflect)->att.x *= trace->att.x;
     (*rt_reflect)->att.y *= trace->att.y;
     (*rt_reflect)->att.z *= trace->att.z;
     // 这里可以优化, 如果att小于一定数值则不再跟踪
+    if (modulation(&(*rt_reflect)->att) < 0.1 * modulation(&(*rt_reflect)->world->ambient_light)) {
+      free(*rt_reflect);
+      *rt_reflect = NULL;
+    }
   }
 
   if (object->refraction_func) {
@@ -100,7 +114,10 @@ void ray_trace_mapper(RayTrace *trace, RayTrace **rt_reflect, RayTrace **rt_refr
   }
 }
 
-/* reduce: (reflection, refractioin) => parent(may be reflection or refraction) */
+/* *
+ * reduce: (reflection, refraction) => parent(may be reflection or refraction)
+ * 做某一点多个光线的叠加
+ * */
 Vector ray_trace_reducer(const Vector *ra, const Vector *rb) {
   Vector ret = color_mix(*ra, *rb);
   return ret;
@@ -140,7 +157,7 @@ Vector ray_trace_map_reduce_driver(const World *world, const Ray *ray, int total
 
     // enqueue all unmapped, and save all leaf nodes
     if (refl != NULL) {
-      if (refr->type == RT_Reflection) {
+      if (refl->type == RT_Reflection) {
         LIST_NODE_INSERT(&queue, refl);
       }
       else {
@@ -199,10 +216,10 @@ Vector ray_trace_shabby(World *world, Ray *ray, int trace_times) {
 
   Vector color, att;
   // 如果是反射材质, 跟踪反射光线
-  if (object->attenuation_func) {
+  if (object->reflective_attenuation_func) {
     color = ray_trace(world, &reflect, trace_times - 1, 0, 0, NULL);
     // 乘以反射光线的衰减系数
-    att = object->attenuation_func(object, ray, &reflect, &intersection, &n);
+    att = object->reflective_attenuation_func(object, ray, &reflect, &intersection, &n);
     color.x *= att.x;
     color.y *= att.y;
     color.z *= att.z;

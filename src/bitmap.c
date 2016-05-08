@@ -73,17 +73,20 @@ static void write_png_file(Bitmap *bitmap, const char* file_name) {
 
   row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
   for(int y = 0; y < height; y++) {
-    row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png_ptr, info_ptr));
+    row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr, info_ptr));
   }
 
   for (int y = 0; y < height; y++) {
     png_byte* row = row_pointers[y];
     for (int x = 0; x < width; x++) {
       png_byte* ptr = &(row[x * 4]);
-      ptr[0] = (png_byte)(bitmap->buffer[x][y].x * 0xFF);
-      ptr[1] = (png_byte)(bitmap->buffer[x][y].y * 0xFF);
-      ptr[2] = (png_byte)(bitmap->buffer[x][y].z * 0xFF);
+      double r, g, b;
+      color_get_rgb(&bitmap->buffer[x][y], &r, &g, &b);
+      ptr[0] = (png_byte)(r * 0xFF);
+      ptr[1] = (png_byte)(g * 0xFF);
+      ptr[2] = (png_byte)(b * 0xFF);
       ptr[3] = 0xFF;
+     // printf("(%d, %d): %f, %f, %f\n", x, y, r, g, b);
     }
   }
 

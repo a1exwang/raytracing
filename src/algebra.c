@@ -92,6 +92,15 @@ Vector color_black() {
   return ret;
 }
 
+void color_get_rgb(const Vector *color, double *r, double *g, double *b) {
+//  *r = 1 - 1 / exp(color->x);
+//  *g = 1 - 1 / exp(color->y);
+//  *b = 1 - 1 / exp(color->z);
+  *r = color->x;
+  *g = color->y;
+  *b = color->z;
+}
+
 Vector color_mix(Vector a, Vector b) {
   double e = M_E;
   Vector v = {
@@ -109,8 +118,15 @@ Vector color_mix(Vector a, Vector b) {
 //          .y = fmax((a.y+b.y)/2, 1),
 //          .z = fmax((a.z+b.z)/2, 1)
 //  };
+//  Vector v = {
+//          a.x + b.x,
+//          a.y + b.y,
+//          a.z + b.z
+//  };
   return v;
 }
+
+
 
 double vdot(Vector a, Vector b) {
   return dot(&a, &b);

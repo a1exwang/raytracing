@@ -23,7 +23,7 @@ typedef struct TRayTrace {
   int trace_times;
 
   Ray ray;
-  Vector att;
+  Vector att; // 衰减度
 
   struct TRayTrace *parent;
   int type;
@@ -31,7 +31,6 @@ typedef struct TRayTrace {
   Vector color;
 
   int x, y;
-  //Vector **buffer;
 } RayTrace;
 
 void ray_trace(World *world, Ray *ray, int trace_times, int x, int y, Vector **buffer);

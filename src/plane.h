@@ -14,7 +14,7 @@ typedef struct TPlane {
   Object object;
   int unlimited;
   double width, height;
-  Vector color_attenuation;
+  Vector reflective_attenuation;
 } Plane;
 
 void plane_init(Plane *plane);

@@ -5,13 +5,13 @@
 #include "plane.h"
 #include "algebra.h"
 #include <memory.h>
-Vector plane_attenuation_func(const struct TObject *object,
-                               const Ray *ray,
-                               const Ray *reflect,
-                               const Vector *pt,
-                               const Vector *n) {
+Vector plane_reflective_attenuation_func(const struct TObject *object,
+                                         const Ray *ray,
+                                         const Ray *reflect,
+                                         const Vector *pt,
+                                         const Vector *n) {
   const Plane *plane = (const Plane*) object->priv;
-  return plane->color_attenuation;
+  return plane->reflective_attenuation;
 }
 
 
@@ -28,9 +28,10 @@ void plane_init(Plane *plane) {
   list_init(&plane->object.list);
   plane->object.intersection = plane_intersection;
   plane->object.normal_func = plane_normal_func;
-  plane->object.attenuation_func = plane_attenuation_func;
+  plane->object.reflective_attenuation_func = plane_reflective_attenuation_func;
+  plane->object.refraction_func = NULL;
 
-  plane->color_attenuation = v3(0.4, 0.4, 0.4);
+  plane->reflective_attenuation = v3(0.4, 0.4, 0.4);
 }
 
 int plane_intersection(const Object *object, const Ray *ray, Ray *reflect, Vector *inter, Vector *n) {

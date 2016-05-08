@@ -12,6 +12,7 @@
 struct TWorld;
 struct TLight;
 typedef Vector (*LightDiffuseFunc) (const struct TLight *light, const struct TWorld *world, const Vector *pos, const Object *object);
+typedef Vector (*LightReflectiveFunc) (const struct TLight *light, const struct TWorld *world, const Vector *pos, const Object *object, const Ray *ray);
 
 enum {
   Light_Spot
@@ -23,6 +24,7 @@ typedef struct TLight {
   Vector pos;
   Vector color;
   LightDiffuseFunc diffuse_func;
+  LightReflectiveFunc reflective_func;
   void *priv;
 } Light;
 
@@ -35,5 +37,10 @@ typedef struct TLight {
 
 void spot_light_init(Light *light, double r, double g, double b);
 Vector spot_light_diffuse_func(const Light *light, const struct TWorld *world, const Vector *pos, const Object *object);
+Vector spot_light_reflective_func(const Light *light,
+                                  const struct TWorld *world,
+                                  const Vector *pos,
+                                  const Object *object,
+                                  const Ray *ray);
 
 #endif //RAYTRACING_LIGHT_H

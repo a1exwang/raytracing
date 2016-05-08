@@ -37,6 +37,7 @@ int zero(double value);
 Vector v3(double x, double y, double z);
 Vector color_black();
 Vector color_mix(Vector a, Vector b);
+void color_get_rgb(const Vector *color, double *r, double *g, double *b);
 
 
 #endif

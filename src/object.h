@@ -32,7 +32,7 @@ typedef struct TObject {
   void *priv;
   NormalFunc normal_func;
   IntersectFunc intersection;
-  AttenuationFunc attenuation_func;
+  AttenuationFunc reflective_attenuation_func;
   RefractionFunc refraction_func;
 
 } Object;
